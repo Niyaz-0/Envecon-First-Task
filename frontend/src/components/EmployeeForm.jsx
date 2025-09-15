@@ -1,0 +1,203 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import EmployeeTable from "./EmployeeTable";
+import { useEmployees } from "../context/EmployeeContext";
+import { useUsers } from "../context/UserContext";
+import toast from "react-hot-toast";
+import LoadingSpinner from "./LoadingSpinner";
+import { api } from "../utils/api";
+
+export default function EmployeeForm() {
+  const { users } = useUsers();
+  const lastUser = users && users.length > 0 ? users[users.length - 1] : null;
+  const employee_name = lastUser ? `${lastUser.firstname} ${lastUser.lastname}` : "";
+
+  const [empFormData, setEmpFormData] = useState({
+    employee_name: employee_name || "",
+    employee_id: "",
+    department: "",
+    profile: "",
+  });
+
+  const { employees, setEmployees, fetchEmployees } = useEmployees();
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const departments = ["HR", "Sales", "Finance", "Engineering", "Marketing"];
+  const profiles = [
+    "Manager",
+    "Team Lead",
+    "Senior Developer",
+    "Intern",
+    "Trainee",
+  ];
+
+  const validateForm = () => {
+    const validationErrors = {};
+
+    if (!empFormData.employee_name.trim())
+      validationErrors.employee_name = "Employee Name is required!";
+    if (!empFormData.employee_id)
+      validationErrors.employee_id = "Employee Id is required!";
+    if (!empFormData.department)
+      validationErrors.department = "Department is required!";
+    if (!empFormData.profile) validationErrors.profile = "Profile is required!";
+
+    return validationErrors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const validationErrors = validateForm();
+
+    setErrors(validationErrors);
+
+    if (Object.keys(validationErrors).length === 0) {
+      try {
+        setLoading(true);
+        setErrors({});
+        await api.post("/employees", empFormData);
+        toast.success("Employee added successfully!");
+        setEmpFormData({
+          employee_name: employee_name || "",
+          employee_id: "",
+          department: "",
+          profile: "",
+        });
+        await fetchEmployees();
+      } catch (error) {
+        console.error("Error adding employee:", error);
+        toast.error("Failed to add employee.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (
+      employee_name &&
+      employees.some(emp => emp.employee_name === employee_name)
+    ) {
+      setEmpFormData(prev => ({
+        ...prev,
+        employee_name: ""
+      }));
+    }
+  }, [employee_name, employees]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 py-8 px-4 flex flex-col items-center">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-4xl mx-auto p-8 space-y-6 bg-white shadow-xl rounded-2xl border border-gray-200"
+      >
+        <h1 className="text-4xl text-center font-extrabold pb-6 text-purple-700">Employee Form</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">Employee Name</label>
+            <input
+              name="employee_name"
+              placeholder="Eg: John Doe"
+              value={empFormData.employee_name}
+              onChange={(e) =>
+                setEmpFormData({ ...empFormData, employee_name: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            {errors.employee_name && (
+              <p className="text-red-500 text-sm mt-1">{errors.employee_name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">Employee Id</label>
+            <input
+              name="employee_id"
+              placeholder="Eg: 2345"
+              value={empFormData.employee_id}
+              onChange={(e) =>
+                setEmpFormData({ ...empFormData, employee_id: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+            {errors.employee_id && (
+              <p className="text-red-500 text-sm mt-1">{errors.employee_id}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">Department</label>
+            <select
+              name="department"
+              value={empFormData.department}
+              onChange={(e) =>
+                setEmpFormData({ ...empFormData, department: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              <option value="" disabled>
+                Select
+              </option>
+              {departments.map((department) => (
+                <option key={department}>{department}</option>
+              ))}
+            </select>
+            {errors.department && (
+              <p className="text-red-500 text-sm mt-1">{errors.department}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">Profile</label>
+            <select
+              name="profile"
+              value={empFormData.profile}
+              onChange={(e) =>
+                setEmpFormData({ ...empFormData, profile: e.target.value })
+              }
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              <option value="" disabled>
+                Select
+              </option>
+              {profiles.map((profile) => (
+                <option key={profile}>{profile}</option>
+              ))}
+            </select>
+            {errors.profile && (
+              <p className="text-red-500 text-sm mt-1">{errors.profile}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
+          <button type="submit" disabled={loading} className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
+            {loading ? <LoadingSpinner /> : "Save"}
+          </button>
+
+          <Link
+            to="/users"
+            className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition flex items-center justify-center"
+          >
+            Go to User Form
+          </Link>
+        </div>
+      </form>
+
+      <div className="w-full max-w-4xl mx-auto mt-10 p-4 bg-white shadow-xl rounded-2xl border border-gray-200">
+        <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">
+          Employee Data Table
+        </h2>
+        <EmployeeTable employees={employees} setEmployees={setEmployees} />
+      </div>
+    </div>
+  );
+}
