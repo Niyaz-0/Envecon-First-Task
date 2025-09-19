@@ -1,25 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 import { SquarePen, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import toast from "react-hot-toast";
+import ConfirmModal from "./ConfirmModal";
 
-export default function UserTable({ users, setUsers }) {
-  const navigate = useNavigate();
+export default function UserTable({ users, setUsers, onEdit }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
-  const onDelete = async (user_id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+  const handleDeleteClick = (user_id) => {
+    setDeleteId(user_id);
+    setModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
     try {
-      await api.delete(`/users/${user_id}`);
+      await api.delete(`/users/${deleteId}`);
       toast.success("User deleted successfully");
-      setUsers(users.filter((user) => user.id !== user_id));
+      setUsers(users.filter((user) => user.id !== deleteId));
     } catch (error) {
       console.log("Error while deleting user", error);
+    } finally {
+      setModalOpen(false);
+      setDeleteId(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setModalOpen(false);
+    setDeleteId(null);
   };
 
   return (
     <div className="mt-6">
+      <ConfirmModal
+        open={modalOpen}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        message="Are you sure you want to delete this user?"
+      />
       {users.length === 0 ? (
         <p className="text-gray-500 text-center py-8">No users added yet.</p>
       ) : (
@@ -47,14 +66,14 @@ export default function UserTable({ users, setUsers }) {
                   <td className="py-2 px-4 border-b text-left">{user.district}</td>
                   <td className="py-2 px-4 border-b text-left space-x-2">
                     <button
-                      onClick={() => navigate(`/users/${user.id}`)}
+                      onClick={() => onEdit(user.id)}
                       className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
                       title="Edit"
                     >
                       <SquarePen />
                     </button>
                     <button
-                      onClick={() => onDelete(user.id)}
+                      onClick={() => handleDeleteClick(user.id)}
                       className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                       title="Delete"
                     >

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import EmployeeTable from "./EmployeeTable";
 import { useEmployees } from "../context/EmployeeContext";
 import { useUsers } from "../context/UserContext";
@@ -8,22 +8,34 @@ import LoadingSpinner from "./LoadingSpinner";
 import { api } from "../utils/api";
 
 export default function EmployeeForm() {
+  const { state } = useLocation();
   const { users } = useUsers();
+  const { employees } = useEmployees();
+
+  console.log(state.employee_name)
+
   const lastUser = users && users.length > 0 ? users[users.length - 1] : null;
-  const employee_name = lastUser ? `${lastUser.firstname} ${lastUser.lastname}` : "";
+
+  // Check if state.employee_name exists and is NOT already in employees
+  const stateEmpNameIsUnique =
+    state?.employee_name &&
+    !employees.some(emp => emp.employee_name === state.employee_name);
+
+  const employee_name = stateEmpNameIsUnique
+    ? state.employee_name
+    : lastUser
+      ? `${lastUser.firstname} ${lastUser.lastname}`
+      : "";
 
   const [empFormData, setEmpFormData] = useState({
-    employee_name: employee_name || "",
+    employee_name: employee_name,
     employee_id: "",
     department: "",
     profile: "",
   });
+  const [editingId, setEditingId] = useState(null);
 
-  const { employees, setEmployees, fetchEmployees } = useEmployees();
-
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  const { employees: empList, setEmployees, fetchEmployees } = useEmployees();
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -61,35 +73,60 @@ export default function EmployeeForm() {
       try {
         setLoading(true);
         setErrors({});
-        await api.post("/employees", empFormData);
-        toast.success("Employee added successfully!");
+        if (editingId) {
+          await api.put(`/employees/${editingId}`, empFormData);
+          toast.success("Employee updated successfully!");
+        } else {
+          await api.post("/employees", empFormData);
+          toast.success("Employee added successfully!");
+        }
         setEmpFormData({
-          employee_name: employee_name || "",
+          employee_name: employee_name,
           employee_id: "",
           department: "",
           profile: "",
         });
+        setEditingId(null);
         await fetchEmployees();
       } catch (error) {
-        console.error("Error adding employee:", error);
-        toast.error("Failed to add employee.");
+        console.error("Error saving employee:", error);
+        toast.error("Failed to save employee.");
       } finally {
         setLoading(false);
       }
     }
   };
 
+  const onEdit = (id) => {
+    const employee = empList.find(emp => emp.id === id);
+    if (employee) {
+      setEmpFormData({
+        employee_name: employee.employee_name,
+        employee_id: employee.employee_id,
+        department: employee.department,
+        profile: employee.profile,
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top
+      setEditingId(id);
+    }
+  };
+
   useEffect(() => {
     if (
       employee_name &&
-      employees.some(emp => emp.employee_name === employee_name)
+      empList.some(emp => emp.employee_name === employee_name)
     ) {
       setEmpFormData(prev => ({
         ...prev,
         employee_name: ""
       }));
     }
-  }, [employee_name, employees]);
+  }, [employee_name, empList]);
+
+/*   useEffect(() => {
+    fetchEmployees();
+  }, []);
+ */
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 py-8 px-4 flex flex-col items-center">
@@ -97,10 +134,14 @@ export default function EmployeeForm() {
         onSubmit={handleSubmit}
         className="w-full max-w-4xl mx-auto p-8 space-y-6 bg-white shadow-xl rounded-2xl border border-gray-200"
       >
-        <h1 className="text-4xl text-center font-extrabold pb-6 text-purple-700">Employee Form</h1>
+        <h1 className="text-4xl text-center font-extrabold pb-6 text-purple-700">
+          Employee Form
+        </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">Employee Name</label>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">
+              Employee Name
+            </label>
             <input
               name="employee_name"
               placeholder="Eg: John Doe"
@@ -116,7 +157,9 @@ export default function EmployeeForm() {
           </div>
 
           <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">Employee Id</label>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">
+              Employee Id
+            </label>
             <input
               name="employee_id"
               placeholder="Eg: 2345"
@@ -134,7 +177,9 @@ export default function EmployeeForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">Department</label>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">
+              Department
+            </label>
             <select
               name="department"
               value={empFormData.department}
@@ -156,7 +201,9 @@ export default function EmployeeForm() {
           </div>
 
           <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">Profile</label>
+            <label className="block text-lg font-semibold mb-2 text-gray-700">
+              Profile
+            </label>
             <select
               name="profile"
               value={empFormData.profile}
@@ -179,8 +226,12 @@ export default function EmployeeForm() {
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
-          <button type="submit" disabled={loading} className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
-            {loading ? <LoadingSpinner /> : "Save"}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+          >
+            {loading ? <LoadingSpinner /> : editingId ? "Update" : "Save"}
           </button>
 
           <Link
@@ -196,7 +247,11 @@ export default function EmployeeForm() {
         <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">
           Employee Data Table
         </h2>
-        <EmployeeTable employees={employees} setEmployees={setEmployees} />
+        <EmployeeTable
+          employees={empList}
+          setEmployees={setEmployees}
+          onEdit={onEdit}
+        />
       </div>
     </div>
   );

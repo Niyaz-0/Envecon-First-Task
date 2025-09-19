@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { validatePhone, validatePin } from "../utils/validate";
+import { validateName, validatePhone, validatePin } from "../utils/validate";
 import { Link, useLocation } from "react-router-dom";
 import UserTable from "./UserTable";
 import { useUsers } from "../context/UserContext";
@@ -21,28 +21,37 @@ export default function UserForm() {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null)
   const { users, setUsers, fetchUsers } = useUsers();
 
   const districts = ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane"];
   const states = ["Maharashtra", "Gujarat", "Rajasthan", "Goa", "Karnataka"];
 
-  useEffect(() => {
+/*   useEffect(() => {
     fetchUsers()
-  }, [])
+  }, []) */
 
   const validateForm = () => {
     const validationErrors = {};
 
     if (!formData.firstname.trim())
       validationErrors.firstname = "Firstname is required!";
+    else if(!validateName(formData.firstname))
+      validationErrors.firstname = "Firstname should not contain numbers/special characters!"
+
     if (!formData.lastname.trim())
       validationErrors.lastname = "Lastname is required!";
+    else if(!validateName(formData.lastname))
+      validationErrors.lastname = "Lastname should not contain numbers/special characters!"
+
     if (!formData.gender) validationErrors.gender = "Gender is required!";
     if (!formData.phone.trim()) {
       validationErrors.phone = "Phone Number is required!";
     } else if (!validatePhone(formData.phone)) {
       validationErrors.phone = "Phone Number is invalid!";
-    }
+    } 
+
+
     if (!formData.address_line1.trim())
       validationErrors.address_line1 = "Address Line 1 is required!";
     if (!formData.pin.trim()) {
@@ -58,6 +67,25 @@ export default function UserForm() {
     return validationErrors;
   };
 
+  const onEdit = (user_id) => {
+    const user = users.find(user => user.id === user_id)
+    if(user) {
+      setFormData({
+        firstname: user.firstname,
+        lastname: user.lastname,
+        gender: user.gender,
+        phone: user.phone,
+        address_line1: user.address_line1,
+        address_line2: user.address_line2,
+        pin: user.pin,
+        district: user.district,
+        state: user.state,
+      })
+      window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top
+      setEditingId(user_id)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -69,9 +97,15 @@ export default function UserForm() {
       try {
         setLoading(true);
         setErrors({});
-        const response = await api.post("/users", formData);
-        
-        toast.success("User created successfully!");
+        if(editingId) {
+          await api.put(`/users/${editingId}`, formData)
+          toast.success("User updated successfully")
+        }
+        else {
+          await api.post("/users", formData);
+          toast.success("User created successfully!");
+        } 
+       
         // Refetch users
         await fetchUsers();
 
@@ -86,10 +120,11 @@ export default function UserForm() {
           district: "",
           state: "",
         });
+        setEditingId(null)
 
       } catch (error) {
-        console.log("Error while creating user", error);
-        toast.error("Error while creating user")
+        console.log("Error while saving user", error);
+        toast.error("Error while saving user")
       } finally {
         setLoading(false);
       }
@@ -110,6 +145,7 @@ export default function UserForm() {
             <input
               name="firstname"
               placeholder="Eg: John"
+              type="text"
               value={formData.firstname}
               onChange={(e) =>
                 setFormData({ ...formData, firstname: e.target.value })
@@ -293,14 +329,14 @@ export default function UserForm() {
 
         <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
           <button type="submit" disabled={loading} className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition">
-            {loading ? <LoadingSpinner /> : "Save"}
+            {loading ? <LoadingSpinner /> : editingId ? "Update" : "Save"}
           </button>
 
           <Link
             to="/employees"
             className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition flex items-center justify-center"
             state={{
-              employeeName: formData.firstname + " " + formData.lastname,
+              employee_name: formData.firstname + " " + formData.lastname,
             }}
           >
             Go to Employee Form
@@ -312,7 +348,7 @@ export default function UserForm() {
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
           User Data Table
         </h2>
-        <UserTable users={users} setUsers={setUsers} />
+        <UserTable users={users} setUsers={setUsers} onEdit={onEdit} />
       </div>
     </div>
   );
