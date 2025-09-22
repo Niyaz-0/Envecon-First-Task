@@ -9,8 +9,10 @@ def create_user(db: Session, user: schemas.UserBase):
     db.refresh(db_user)
     return db_user
 
-def get_users(db: Session):
-    return db.query(models.User).all()
+def get_users(db: Session, limit: int = 5, offset: int = 0):
+    users = db.query(models.User).offset(offset).limit(limit).all()
+    total = db.query(models.User).count()
+    return {"users": users, "total": total}
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -32,6 +34,9 @@ def delete_user(db: Session, user_id: int):
         return True
     return False
 
+def get_last_user(db: Session):
+    return db.query(models.User).order_by(models.User.id.desc()).first()
+
 
 #Employee CRUD
 def create_employee(db: Session, emp: schemas.EmployeeBase):
@@ -41,8 +46,10 @@ def create_employee(db: Session, emp: schemas.EmployeeBase):
     db.refresh(db_emp)
     return db_emp
 
-def get_employees(db: Session):
-    return db.query(models.Employee).all()
+def get_employees(db: Session, limit: int = 10, offset: int = 0):
+    employees = db.query(models.Employee).offset(offset).limit(limit).all()
+    total = db.query(models.Employee).count()
+    return {"employees": employees, "total": total}
 
 def get_employee(db: Session, emp_id: int):
     return db.query(models.Employee).filter(models.Employee.id == emp_id).first()

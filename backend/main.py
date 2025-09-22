@@ -5,7 +5,7 @@ from routers import users, employees
 
 Base.metadata.create_all(bind = engine)
 
-app = FastAPI()
+app = FastAPI(title="First Task")
 
 app.add_middleware(
     CORSMiddleware,

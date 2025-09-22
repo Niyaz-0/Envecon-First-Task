@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import schemas, crud
 from database import get_db
@@ -9,9 +9,13 @@ router = APIRouter(prefix="/employees", tags=["Employees"])
 def create_employee(emp: schemas.EmployeeBase, db: Session = Depends(get_db)):
     return crud.create_employee(db, emp)
 
-@router.get("/", response_model=list[schemas.EmployeeResponse])
-def get_employees(db: Session = Depends(get_db)):
-    return crud.get_employees(db)
+@router.get("/", response_model=None)
+def get_employees(
+    db: Session = Depends(get_db),
+    limit: int = Query(10, ge=1),
+    offset: int = Query(0, ge=0)
+):
+    return crud.get_employees(db, limit=limit, offset=offset)
 
 @router.get("/{emp_id}", response_model=schemas.EmployeeResponse)
 def get_employee(emp_id: int, db: Session = Depends(get_db)):

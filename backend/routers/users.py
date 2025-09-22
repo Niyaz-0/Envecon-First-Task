@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import schemas, crud
 from database import get_db
@@ -9,9 +9,16 @@ router = APIRouter(prefix="/users", tags=["Users"]) #tags for grouping docs
 def create_user(user: schemas.UserBase, db: Session = Depends(get_db)):
     return crud.create_user(db, user)
 
-@router.get("/", response_model=list[schemas.UserResponse])
-def get_users(db: Session = Depends(get_db)):
-    return crud.get_users(db)
+@router.get("/", response_model=None) # For pagination
+def get_users(db: Session = Depends(get_db), limit: int = Query(5, ge=1), offset: int = Query(0, ge=0)):
+    return crud.get_users(db, limit=limit, offset=offset)
+
+@router.get("/last", response_model=schemas.UserResponse)
+def get_last_user(db: Session = Depends(get_db)):
+    user = crud.get_last_user(db)
+    if not user:
+        raise HTTPException(status_code=404, detail="No users found")
+    return user
 
 @router.get("/{user_id}", response_model=schemas.UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):

@@ -2,23 +2,37 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import EmployeeTable from "./EmployeeTable";
 import { useEmployees } from "../context/EmployeeContext";
-import { useUsers } from "../context/UserContext";
 import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
 import { api } from "../utils/api";
 
 export default function EmployeeForm() {
   const { state } = useLocation();
-  const { users } = useUsers();
   const { employees } = useEmployees();
 
-  console.log(state.employee_name)
+  const [lastUser, setLastUser] = useState(null);
 
-  const lastUser = users && users.length > 0 ? users[users.length - 1] : null;
+  useEffect(() => {
+    const fetchLastUser = async () => {
+      try {
+        const response = await api.get("/users/last");
+        setLastUser(response.data);
+      } catch (error) {
+        console.log("Error fetching last user:", error);
+        setLastUser(null);
+      }
+    };
+    fetchLastUser();
+  }, []);
 
-  // Check if state.employee_name exists and is NOT already in employees
+  console.log(lastUser)
+
+  // Helper to check if a string is non-empty and not just whitespace
+  const isNonEmptyString = str => typeof str === "string" && str.trim().length > 0;
+
+  // Check if state.employee_name exists, is non-empty, and is NOT already in employees
   const stateEmpNameIsUnique =
-    state?.employee_name &&
+    isNonEmptyString(state?.employee_name) &&
     !employees.some(emp => emp.employee_name === state.employee_name);
 
   const employee_name = stateEmpNameIsUnique
@@ -34,8 +48,10 @@ export default function EmployeeForm() {
     profile: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 5; // or any number you want per page
 
-  const { employees: empList, setEmployees, fetchEmployees } = useEmployees();
+  const { employees: empList, setEmployees, fetchEmployees, total } = useEmployees();
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -123,10 +139,31 @@ export default function EmployeeForm() {
     }
   }, [employee_name, empList]);
 
-/*   useEffect(() => {
-    fetchEmployees();
-  }, []);
- */
+  useEffect(() => {
+    fetchEmployees(pageSize, (page - 1) * pageSize);
+  }, [page]);
+
+  useEffect(() => {
+    // Helper to check if a string is non-empty and not just whitespace
+    const isNonEmptyString = str => typeof str === "string" && str.trim().length > 0;
+
+    // Compose last user's full name
+    const lastUserName = lastUser
+      ? `${lastUser.firstname} ${lastUser.lastname}`
+      : "";
+      
+    if (
+      !isNonEmptyString(state?.employee_name) &&
+      lastUser &&
+      !employees.some(emp => emp.employee_name === lastUserName) &&
+      (!empFormData.employee_name || empFormData.employee_name.trim() === "")
+    ) {
+      setEmpFormData(prev => ({
+        ...prev,
+        employee_name: lastUserName
+      }));
+    }
+  }, [lastUser, state?.employee_name, empFormData.employee_name, employees]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 py-8 px-4 flex flex-col items-center">
@@ -251,6 +288,10 @@ export default function EmployeeForm() {
           employees={empList}
           setEmployees={setEmployees}
           onEdit={onEdit}
+          page={page}
+          setPage={setPage}
+          pageSize={pageSize}
+          total={total}
         />
       </div>
     </div>

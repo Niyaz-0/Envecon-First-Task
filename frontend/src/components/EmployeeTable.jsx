@@ -4,7 +4,7 @@ import { api } from '../utils/api';
 import toast from 'react-hot-toast';
 import ConfirmModal from './ConfirmModal';
 
-export default function EmployeeTable({ employees, setEmployees, onEdit }) {
+export default function EmployeeTable({ employees, setEmployees, onEdit, page, setPage, pageSize, total }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
@@ -82,6 +82,25 @@ export default function EmployeeTable({ employees, setEmployees, onEdit }) {
           </table>
         </div>
       )}
+      <div className="flex justify-center items-center gap-2 mt-4">
+        <button
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span>
+          Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
+        </span>
+        <button
+          onClick={() => setPage(page + 1)}
+          disabled={page * pageSize >= total}
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
