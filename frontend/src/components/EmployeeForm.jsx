@@ -127,6 +127,17 @@ export default function EmployeeForm() {
     }
   };
 
+  // Real-time validation for each field
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEmpFormData((prev) => ({ ...prev, [name]: value }));
+
+    let error = "";
+    if (!value.trim()) error = `${name.replace("_", " ")} is required!`;
+
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
   useEffect(() => {
     if (
       employee_name &&
@@ -188,16 +199,23 @@ export default function EmployeeForm() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                {/* Employee Name */}
+                <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                   Employee Name
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
                   name="employee_name"
                   placeholder="Eg: John Doe"
                   value={empFormData.employee_name}
-                  onChange={(e) =>
-                    setEmpFormData({ ...empFormData, employee_name: e.target.value })
-                  }
+                  onChange={e => {
+                    const value = e.target.value;
+                    setEmpFormData(prev => ({ ...prev, employee_name: value }));
+                    setErrors(prev => ({
+                      ...prev,
+                      employee_name: !value.trim() ? "Employee Name is required!" : ""
+                    }));
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 {errors.employee_name && (
@@ -206,16 +224,40 @@ export default function EmployeeForm() {
               </div>
 
               <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                {/* Employee Id */}
+                <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                   Employee Id
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
                   name="employee_id"
                   placeholder="Eg: 2345"
                   value={empFormData.employee_id}
-                  onChange={(e) =>
-                    setEmpFormData({ ...empFormData, employee_id: e.target.value })
-                  }
+                  maxLength={4}
+                  onChange={e => {
+                    let value = e.target.value;
+                    // Only allow digits, max 4
+                    value = value.replace(/\D/g, "").slice(0, 4);
+                    setEmpFormData(prev => ({ ...prev, employee_id: value }));
+
+                    let error = "";
+                    if (!value) {
+                      error = "Employee Id is required!";
+                    } else if (value.length > 4) {
+                      error = "Employee Id cannot be more than 4 digits!";
+                    } else if (value.length < 4) {
+                      error = "Employee Id must be 4 digits!";
+                    } else if (
+                      empList.some(
+                        emp =>
+                          emp.employee_id === value &&
+                          (editingId ? emp.id !== editingId : true)
+                      )
+                    ) {
+                      error = "Employee Id must be unique!";
+                    }
+                    setErrors(prev => ({ ...prev, employee_id: error }));
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 {errors.employee_id && (
@@ -226,15 +268,22 @@ export default function EmployeeForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                {/* Department */}
+                <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                   Department
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <select
                   name="department"
                   value={empFormData.department}
-                  onChange={(e) =>
-                    setEmpFormData({ ...empFormData, department: e.target.value })
-                  }
+                  onChange={e => {
+                    const value = e.target.value;
+                    setEmpFormData(prev => ({ ...prev, department: value }));
+                    setErrors(prev => ({
+                      ...prev,
+                      department: !value ? "Department is required!" : ""
+                    }));
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 >
                   <option value="" disabled>
@@ -250,15 +299,22 @@ export default function EmployeeForm() {
               </div>
 
               <div>
-                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                {/* Profile */}
+                <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                   Profile
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <select
                   name="profile"
                   value={empFormData.profile}
-                  onChange={(e) =>
-                    setEmpFormData({ ...empFormData, profile: e.target.value })
-                  }
+                  onChange={e => {
+                    const value = e.target.value;
+                    setEmpFormData(prev => ({ ...prev, profile: value }));
+                    setErrors(prev => ({
+                      ...prev,
+                      profile: !value ? "Profile is required!" : ""
+                    }));
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 >
                   <option value="" disabled>

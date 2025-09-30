@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { validateName, validatePhone, validatePin } from "../utils/validate";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import UserTable from "./UserTable";
 import { useUsers } from "../context/UserContext";
 import toast from "react-hot-toast";
@@ -32,7 +32,7 @@ export default function UserForm() {
   const districts = ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane"];
   const states = ["Maharashtra", "Gujarat", "Rajasthan", "Goa", "Karnataka"];
 
-  const navigate = useNavigate();
+/*   const navigate = useNavigate(); */
 
   useEffect(() => {
     fetchUsers(pageSize, (page - 1) * pageSize);
@@ -144,7 +144,7 @@ export default function UserForm() {
         >
           {/* Heading and Collapse Button */}
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-4xl font-extrabold text-blue-700 flex-1 text-center">
+            <h1 className="text-4xl font-extrabold text-blue-700 flex-1">
               User Form
             </h1>
             <button
@@ -160,17 +160,25 @@ export default function UserForm() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* First Name */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     First Name
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
                     name="firstname"
                     placeholder="Eg: John"
                     type="text"
                     value={formData.firstname}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstname: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, firstname: value });
+                      let error = "";
+                      if (!value.trim()) error = "Firstname is required!";
+                      else if (!validateName(value))
+                        error = "Firstname should not contain numbers/special characters!";
+                      setErrors((prev) => ({ ...prev, firstname: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                   {errors.firstname && (
@@ -179,16 +187,24 @@ export default function UserForm() {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* Last Name */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     Last Name
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
                     name="lastname"
                     placeholder="Eg: Doe"
                     value={formData.lastname}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastname: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, lastname: value });
+                      let error = "";
+                      if (!value.trim()) error = "Lastname is required!";
+                      else if (!validateName(value))
+                        error = "Lastname should not contain numbers/special characters!";
+                      setErrors((prev) => ({ ...prev, lastname: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                   {errors.lastname && (
@@ -198,8 +214,10 @@ export default function UserForm() {
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 items-center">
-                <label className="block text-lg font-semibold text-gray-700">
+                {/* Gender */}
+                <label className="text-lg font-semibold text-gray-700 flex items-center">
                   Gender
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <div className="flex gap-6">
                   <label className="flex items-center text-base font-medium text-gray-900">
@@ -209,9 +227,12 @@ export default function UserForm() {
                       value="Male"
                       className="mr-2 accent-blue-600"
                       checked={formData.gender === "Male"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, gender: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, gender: e.target.value });
+                        let error = "";
+                        if (!e.target.value) error = "Gender is required!";
+                        setErrors((prev) => ({ ...prev, gender: error }));
+                      }}
                     />
                     Male
                   </label>
@@ -222,30 +243,41 @@ export default function UserForm() {
                       value="Female"
                       className="mr-2 accent-pink-500"
                       checked={formData.gender === "Female"}
-                      onChange={(e) =>
-                        setFormData({ ...formData, gender: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, gender: e.target.value });
+                        let error = "";
+                        if (!e.target.value) error = "Gender is required!";
+                        setErrors((prev) => ({ ...prev, gender: error }));
+                      }}
                     />
                     Female
                   </label>
-                  {errors.gender && (
-                    <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
-                  )}
                 </div>
+                {errors.gender && (
+                  <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* Phone */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     Phone
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
                     name="phone"
                     placeholder="Eg: 9876543210"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    maxLength={10}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      setFormData({ ...formData, phone: value });
+                      let error = "";
+                      if (!value.trim()) error = "Phone Number is required!";
+                      else if (!validatePhone(value)) error = "Phone Number is invalid!";
+                      setErrors((prev) => ({ ...prev, phone: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                   {errors.phone && (
@@ -254,16 +286,24 @@ export default function UserForm() {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* Pin Code */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     Pin Code
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
-                    name="address.pin"
+                    name="pin"
                     placeholder="Eg: 400001"
                     value={formData.pin}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pin: e.target.value })
-                    }
+                    maxLength={6}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      setFormData({ ...formData, pin: value });
+                      let error = "";
+                      if (!value.trim()) error = "Pin Code is required!";
+                      else if (!validatePin(value)) error = "Pin Code is invalid!";
+                      setErrors((prev) => ({ ...prev, pin: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                   {errors.pin && (
@@ -274,29 +314,36 @@ export default function UserForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* Address Line 1 */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     Address Line 1
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
-                    name="line1"
+                    name="address_line1"
                     placeholder="Eg: 123, ABC Street"
                     value={formData.address_line1}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address_line1: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, address_line1: value });
+                      let error = "";
+                      if (!value.trim()) error = "Address Line 1 is required!";
+                      setErrors((prev) => ({ ...prev, address_line1: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
-                  {errors.line1 && (
-                    <p className="text-red-500 text-sm mt-1">{errors.line1}</p>
+                  {errors.address_line1 && (
+                    <p className="text-red-500 text-sm mt-1">{errors.address_line1}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* Address Line 2 (not required, no asterisk) */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700">
                     Address Line 2
                   </label>
                   <input
-                    name="address.line2"
+                    name="address_line2"
                     placeholder="Eg: Near XYZ Park"
                     value={formData.address_line2}
                     onChange={(e) =>
@@ -312,18 +359,21 @@ export default function UserForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* District */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     District
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <select
-                    name="address.district"
+                    name="district"
                     value={formData.district}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        district: e.target.value,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, district: value });
+                      let error = "";
+                      if (!value.trim()) error = "District is required!";
+                      setErrors((prev) => ({ ...prev, district: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   >
                     <option value="" disabled>
@@ -339,18 +389,21 @@ export default function UserForm() {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  {/* State */}
+                  <label className="text-lg font-semibold mb-2 text-gray-700 flex items-center">
                     State
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <select
-                    name="address.state"
+                    name="state"
                     value={formData.state}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        state: e.target.value,
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData({ ...formData, state: value });
+                      let error = "";
+                      if (!value.trim()) error = "State is required!";
+                      setErrors((prev) => ({ ...prev, state: error }));
+                    }}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   >
                     <option value="" disabled>
