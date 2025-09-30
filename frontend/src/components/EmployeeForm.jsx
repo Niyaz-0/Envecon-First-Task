@@ -5,12 +5,14 @@ import { useEmployees } from "../context/EmployeeContext";
 import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
 import { api } from "../utils/api";
+import { PanelBottomOpen, PanelTopOpen } from "lucide-react"
 
 export default function EmployeeForm() {
   const { state } = useLocation();
   const { employees } = useEmployees();
 
   const [lastUser, setLastUser] = useState(null);
+  const [formCollapsed, setFormCollapsed] = useState(false);
 
   useEffect(() => {
     const fetchLastUser = async () => {
@@ -24,8 +26,6 @@ export default function EmployeeForm() {
     };
     fetchLastUser();
   }, []);
-
-  console.log(lastUser)
 
   // Helper to check if a string is non-empty and not just whitespace
   const isNonEmptyString = str => typeof str === "string" && str.trim().length > 0;
@@ -171,113 +171,127 @@ export default function EmployeeForm() {
         onSubmit={handleSubmit}
         className="w-full max-w-4xl mx-auto p-8 space-y-6 bg-white shadow-xl rounded-2xl border border-gray-200"
       >
-        <h1 className="text-4xl text-center font-extrabold pb-6 text-purple-700">
-          Employee Form
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">
-              Employee Name
-            </label>
-            <input
-              name="employee_name"
-              placeholder="Eg: John Doe"
-              value={empFormData.employee_name}
-              onChange={(e) =>
-                setEmpFormData({ ...empFormData, employee_name: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            {errors.employee_name && (
-              <p className="text-red-500 text-sm mt-1">{errors.employee_name}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">
-              Employee Id
-            </label>
-            <input
-              name="employee_id"
-              placeholder="Eg: 2345"
-              value={empFormData.employee_id}
-              onChange={(e) =>
-                setEmpFormData({ ...empFormData, employee_id: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            {errors.employee_id && (
-              <p className="text-red-500 text-sm mt-1">{errors.employee_id}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">
-              Department
-            </label>
-            <select
-              name="department"
-              value={empFormData.department}
-              onChange={(e) =>
-                setEmpFormData({ ...empFormData, department: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              <option value="" disabled>
-                Select
-              </option>
-              {departments.map((department) => (
-                <option key={department}>{department}</option>
-              ))}
-            </select>
-            {errors.department && (
-              <p className="text-red-500 text-sm mt-1">{errors.department}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-lg font-semibold mb-2 text-gray-700">
-              Profile
-            </label>
-            <select
-              name="profile"
-              value={empFormData.profile}
-              onChange={(e) =>
-                setEmpFormData({ ...empFormData, profile: e.target.value })
-              }
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            >
-              <option value="" disabled>
-                Select
-              </option>
-              {profiles.map((profile) => (
-                <option key={profile}>{profile}</option>
-              ))}
-            </select>
-            {errors.profile && (
-              <p className="text-red-500 text-sm mt-1">{errors.profile}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
+        {/* Heading and Collapse Button */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl font-extrabold text-purple-700">Employee Form</h1>
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+            type="button"
+            onClick={() => setFormCollapsed((prev) => !prev)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition flex items-center"
           >
-            {loading ? <LoadingSpinner /> : editingId ? "Update" : "Save"}
+            {formCollapsed ? <PanelTopOpen /> : <PanelBottomOpen />}
           </button>
-
-          <Link
-            to="/users"
-            className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition flex items-center justify-center"
-          >
-            Go to User Form
-          </Link>
         </div>
+
+        {/* Collapsible Form Fields */}
+        {!formCollapsed && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Employee Name
+                </label>
+                <input
+                  name="employee_name"
+                  placeholder="Eg: John Doe"
+                  value={empFormData.employee_name}
+                  onChange={(e) =>
+                    setEmpFormData({ ...empFormData, employee_name: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                {errors.employee_name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.employee_name}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Employee Id
+                </label>
+                <input
+                  name="employee_id"
+                  placeholder="Eg: 2345"
+                  value={empFormData.employee_id}
+                  onChange={(e) =>
+                    setEmpFormData({ ...empFormData, employee_id: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                {errors.employee_id && (
+                  <p className="text-red-500 text-sm mt-1">{errors.employee_id}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Department
+                </label>
+                <select
+                  name="department"
+                  value={empFormData.department}
+                  onChange={(e) =>
+                    setEmpFormData({ ...empFormData, department: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {departments.map((department) => (
+                    <option key={department}>{department}</option>
+                  ))}
+                </select>
+                {errors.department && (
+                  <p className="text-red-500 text-sm mt-1">{errors.department}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold mb-2 text-gray-700">
+                  Profile
+                </label>
+                <select
+                  name="profile"
+                  value={empFormData.profile}
+                  onChange={(e) =>
+                    setEmpFormData({ ...empFormData, profile: e.target.value })
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="" disabled>
+                    Select
+                  </option>
+                  {profiles.map((profile) => (
+                    <option key={profile}>{profile}</option>
+                  ))}
+                </select>
+                {errors.profile && (
+                  <p className="text-red-500 text-sm mt-1">{errors.profile}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-center mt-8 gap-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+              >
+                {loading ? <LoadingSpinner /> : editingId ? "Update" : "Save"}
+              </button>
+
+              <Link
+                to="/users"
+                className="w-full md:w-auto px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition flex items-center justify-center"
+              >
+                Go to User Form
+              </Link>
+            </div>
+          </>
+        )}
       </form>
 
       <div className="w-full max-w-4xl mx-auto mt-10 p-4 bg-white shadow-xl rounded-2xl border border-gray-200">

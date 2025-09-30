@@ -1,0 +1,37 @@
+services:
+  # Your FastAPI + React application
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy # <-- This is the key change
+    environment:
+      - DATABASE_URL=mysql+pymysql://niyaz:niyaz123@db:3306/mydb
+    # volumes:
+    #   - ./backend:/app/backend   # <-- changed: mount into /app/backend, do not overwrite /app
+    restart: unless-stopped
+
+  # MySQL database
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    healthcheck: # <-- Added healthcheck
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: niyaz
+      MYSQL_PASSWORD: niyaz123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # - ./init.sql:/docker-entrypoint-initdb.d/init.sql # <-- Removed this line
+
+volumes:
+  mysql_data:

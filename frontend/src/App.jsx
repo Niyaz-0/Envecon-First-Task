@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast"
 // import UserEditForm from './components/UserEditForm'
 // import EmployeeEditForm from './components/EmployeeEditForm'
 import HomePage from './pages/HomePage'
+import NotFound from './components/NotFound'
 
 export default function App() {
   return (
@@ -18,7 +19,7 @@ export default function App() {
         {/* <Route path='/users/:user_id' element={<UserEditForm />} /> */}
         {/* <Route path='/employees/:emp_id' element={<EmployeeEditForm />} /> */}
 
-        <Route path="*" element={<h1 className='text-center mt-10 text-3xl font-bold'>404: Page Not Found</h1>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
     </div>
