@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import schemas, crud
 from database import get_db
+from typing import Optional
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
@@ -13,9 +14,17 @@ def create_employee(emp: schemas.EmployeeBase, db: Session = Depends(get_db)):
 def get_employees(
     db: Session = Depends(get_db),
     limit: int = Query(10, ge=1),
-    offset: int = Query(0, ge=0)
+    offset: int = Query(0, ge=0),
+    department: Optional[str] = None,
+    profile: Optional[str] = None,
+    search: Optional[str] = None,
+    employee_id: Optional[str] = None
 ):
-    return crud.get_employees(db, limit=limit, offset=offset)
+    return crud.get_employees(
+        db, limit=limit, offset=offset,
+        department=department, profile=profile,
+        search=search, employee_id=employee_id
+    )
 
 @router.get("/{emp_id}", response_model=schemas.EmployeeResponse)
 def get_employee(emp_id: int, db: Session = Depends(get_db)):

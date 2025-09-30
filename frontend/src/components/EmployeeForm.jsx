@@ -49,12 +49,19 @@ export default function EmployeeForm() {
   });
   const [editingId, setEditingId] = useState(null);
   const [page, setPage] = useState(1);
-  const pageSize = 5; // or any number you want per page
+  const [pageSize, setPageSize] = useState(5);
 
   const { employees: empList, setEmployees, fetchEmployees, total } = useEmployees();
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  
+  // Add filter state
+  const [filters, setFilters] = useState({
+    search: "",
+    department: "",
+    profile: ""
+  });
 
   const departments = ["HR", "Sales", "Finance", "Engineering", "Marketing"];
   const profiles = [
@@ -64,6 +71,10 @@ export default function EmployeeForm() {
     "Intern",
     "Trainee",
   ];
+
+  useEffect(() => {
+    fetchEmployees(pageSize, (page - 1) * pageSize, filters);
+  }, [page, filters, pageSize]);
 
   const validateForm = () => {
     const validationErrors = {};
@@ -103,7 +114,7 @@ export default function EmployeeForm() {
           profile: "",
         });
         setEditingId(null);
-        await fetchEmployees();
+        await fetchEmployees(pageSize, (page - 1) * pageSize, filters);
       } catch (error) {
         console.error("Error saving employee:", error);
         toast.error("Failed to save employee.");
@@ -125,6 +136,17 @@ export default function EmployeeForm() {
       window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top
       setEditingId(id);
     }
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    // Reset to page 1 when filters change
+    setPage(1);
+  };
+  
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1); // Reset to page 1 when changing page size
   };
 
   // Real-time validation for each field
@@ -149,10 +171,6 @@ export default function EmployeeForm() {
       }));
     }
   }, [employee_name, empList]);
-
-  useEffect(() => {
-    fetchEmployees(pageSize, (page - 1) * pageSize);
-  }, [page]);
 
   useEffect(() => {
     // Helper to check if a string is non-empty and not just whitespace
@@ -361,7 +379,9 @@ export default function EmployeeForm() {
           page={page}
           setPage={setPage}
           pageSize={pageSize}
+          setPageSize={handlePageSizeChange}
           total={total}
+          onFilter={handleFilterChange}
         />
       </div>
     </div>

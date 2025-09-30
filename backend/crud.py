@@ -9,9 +9,35 @@ def create_user(db: Session, user: schemas.UserBase):
     db.refresh(db_user)
     return db_user
 
-def get_users(db: Session, limit: int = 5, offset: int = 0):
-    users = db.query(models.User).offset(offset).limit(limit).all()
-    total = db.query(models.User).count()
+def get_users(db: Session, limit: int = 5, offset: int = 0, 
+              gender: str = None, district: str = None, 
+              search: str = None, phone: str = None, pin: str = None):
+    query = db.query(models.User)
+    
+    # Apply filters
+    if gender:
+        query = query.filter(models.User.gender == gender)
+    if district:
+        query = query.filter(models.User.district == district)
+    if phone:
+        query = query.filter(models.User.phone.like(f"%{phone}%"))
+    if pin:
+        query = query.filter(models.User.pin.like(f"%{pin}%"))
+    
+    # Apply name search
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(
+            (models.User.firstname.ilike(search_pattern)) | 
+            (models.User.lastname.ilike(search_pattern))
+        )
+    
+    # Get total count (for pagination)
+    total = query.count()
+    
+    # Apply pagination
+    users = query.offset(offset).limit(limit).all()
+    
     return {"users": users, "total": total}
 
 def get_user(db: Session, user_id: int):
@@ -46,9 +72,32 @@ def create_employee(db: Session, emp: schemas.EmployeeBase):
     db.refresh(db_emp)
     return db_emp
 
-def get_employees(db: Session, limit: int = 10, offset: int = 0):
-    employees = db.query(models.Employee).offset(offset).limit(limit).all()
-    total = db.query(models.Employee).count()
+def get_employees(db: Session, limit: int = 10, offset: int = 0, 
+                 department: str = None, profile: str = None, search: str = None,
+                 employee_id: str = None):
+    query = db.query(models.Employee)
+    
+    # Apply filters
+    if department:
+        query = query.filter(models.Employee.department == department)
+    if profile:
+        query = query.filter(models.Employee.profile == profile)
+    
+    # Apply name search
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(models.Employee.employee_name.ilike(search_pattern))
+    
+    # Apply employee ID search
+    if employee_id:
+        query = query.filter(models.Employee.employee_id.like(f"%{employee_id}%"))
+    
+    # Get total count (for pagination)
+    total = query.count()
+    
+    # Apply pagination
+    employees = query.offset(offset).limit(limit).all()
+    
     return {"employees": employees, "total": total}
 
 def get_employee(db: Session, emp_id: int):

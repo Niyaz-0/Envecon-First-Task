@@ -26,17 +26,24 @@ export default function UserForm() {
   const [formCollapsed, setFormCollapsed] = useState(false);
 
   const [page, setPage] = useState(1); //Page.No
-  const pageSize = 5; //Limit | Count
+  const [pageSize, setPageSize] = useState(5); //Limit | Count
   const { users, setUsers, fetchUsers, total } = useUsers();
 
   const districts = ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane"];
   const states = ["Maharashtra", "Gujarat", "Rajasthan", "Goa", "Karnataka"];
 
-/*   const navigate = useNavigate(); */
+  // Add filter state
+  const [filters, setFilters] = useState({
+    search: "",
+    gender: "",
+    district: "",
+  });
+
+  /*   const navigate = useNavigate(); */
 
   useEffect(() => {
-    fetchUsers(pageSize, (page - 1) * pageSize);
-  }, [page]);
+    fetchUsers(pageSize, (page - 1) * pageSize, filters);
+  }, [page, filters, pageSize]);
 
   const validateForm = () => {
     const validationErrors = {};
@@ -133,6 +140,17 @@ export default function UserForm() {
         setLoading(false);
       }
     }
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    // Reset to page 1 when filters change
+    setPage(1);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1); // Reset to page 1 when changing page size
   };
 
   return (
@@ -442,7 +460,7 @@ export default function UserForm() {
           )}
         </form>
       </div>
-      {/* User Table */}
+      {/* User Table with filter support */}
       <div className="w-full max-w-4xl mx-auto mt-10 p-4 bg-white shadow-xl rounded-2xl border border-gray-200">
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">
           User Data Table
@@ -454,7 +472,9 @@ export default function UserForm() {
           page={page}
           setPage={setPage}
           pageSize={pageSize}
+          setPageSize={handlePageSizeChange}
           total={total}
+          onFilter={handleFilterChange}
         />
       </div>
     </div>
