@@ -46,6 +46,7 @@ export default function EmployeeTable({ employees, setEmployees, onEdit, page, s
           <table className="min-w-full table-fixed bg-white border border-gray-200 shadow-md rounded">
             <thead className="bg-gray-300">
               <tr>
+                <th className="py-2 px-4 border-b text-left w-1/12">Sr.No</th>
                 <th className="py-2 px-4 border-b text-left w-1/5">Employee Name</th>
                 <th className="py-2 px-4 border-b text-left w-1/5">Employee Id</th>
                 <th className="py-2 px-4 border-b text-left w-1/5">Department</th>
@@ -54,27 +55,32 @@ export default function EmployeeTable({ employees, setEmployees, onEdit, page, s
               </tr>
             </thead>
             <tbody>
-              {employees.map((employee) => (
+              {employees.map((employee, idx) => (
                 <tr key={employee.id} className="hover:bg-gray-100">
+                  <td className="py-2 px-4 border-b text-left">
+                    {(page - 1) * pageSize + idx + 1}
+                  </td>
                   <td className="py-2 px-4 border-b text-left">{employee.employee_name}</td>
                   <td className="py-2 px-4 border-b text-left">{employee.employee_id}</td>
                   <td className="py-2 px-4 border-b text-left">{employee.department}</td>
                   <td className="py-2 px-4 border-b text-left">{employee.profile}</td>
                   <td className="py-2 px-4 border-b text-left">
-                    <button
-                      className="px-2 py-1 mr-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                      onClick={() => onEdit(employee.id)}
-                      title="Edit"
-                    >
-                      <SquarePen />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(employee.id)}
-                      className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      title="Delete"
-                    >
-                      <Trash2 />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                        onClick={() => onEdit(employee.id)}
+                        title="Edit"
+                      >
+                        <SquarePen />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(employee.id)}
+                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        title="Delete"
+                      >
+                        <Trash2 />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

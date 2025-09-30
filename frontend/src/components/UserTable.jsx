@@ -47,6 +47,7 @@ export default function UserTable({ users, setUsers, onEdit, page, setPage, page
             <table className="min-w-full table-fixed bg-white border border-gray-200 shadow-md rounded">
               <thead className="bg-gray-300">
                 <tr>
+                  <th className="py-2 px-4 border-b text-left w-1/12">Sr.no</th>
                   <th className="py-2 px-4 border-b text-left w-1/6">Name</th>
                   <th className="py-2 px-4 border-b text-left w-1/6">Gender</th>
                   <th className="py-2 px-4 border-b text-left w-1/6">Phone</th>
@@ -56,8 +57,11 @@ export default function UserTable({ users, setUsers, onEdit, page, setPage, page
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {users.map((user, idx) => (
                   <tr key={user.id} className="hover:bg-gray-100">
+                    <td className="py-2 px-4 border-b text-left">
+                      {(page - 1) * pageSize + idx + 1}
+                    </td>
                     <td className="py-2 px-4 border-b text-left">
                       {user.firstname} {user.lastname}
                     </td>
@@ -65,21 +69,23 @@ export default function UserTable({ users, setUsers, onEdit, page, setPage, page
                     <td className="py-2 px-4 border-b text-left">{user.phone}</td>
                     <td className="py-2 px-4 border-b text-left">{user.pin}</td>
                     <td className="py-2 px-4 border-b text-left">{user.district}</td>
-                    <td className="py-2 px-4 border-b text-left space-x-2">
-                      <button
-                        onClick={() => onEdit(user.id)}
-                        className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                        title="Edit"
-                      >
-                        <SquarePen />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(user.id)}
-                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 />
-                      </button>
+                    <td className="py-2 px-4 border-b text-left">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onEdit(user.id)}
+                          className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                          title="Edit"
+                        >
+                          <SquarePen />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(user.id)}
+                          className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
